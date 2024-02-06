@@ -68,6 +68,10 @@ done
 ```
 
 
+##### Results and Logs
+After running, results and logs should be in experiments/{dataset_name}/{version_name}/{noise_rate}/{exp_name}
+
+
 ## Citing this work
 If you use this code in your work, please cite the accompanying paper:
 
