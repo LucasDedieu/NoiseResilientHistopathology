@@ -20,7 +20,7 @@ Check '*.yaml' file in the config folder for each experiment.
 * exp_name: name of the experiments (as note)
 * seed: random seed
 
-Example for baseline runs on all noise rates for NCT-CRC-HE-100k dataset 
+Example for CTransPath runs on all noise rates for NCT-CRC-HE-100k dataset 
 ```console
 #!/bin/bash
 python_script="main.py"
