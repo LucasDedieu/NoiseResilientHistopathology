@@ -6,7 +6,7 @@ Official implementation for the paper "Contrastive-Based Deep Embeddings for Noi
 pip install -r requirements.txt
 ```
 
-Please note: For integration extractions, CTranspath and Pathoduet require two different versions of timm. Make sure you have the appropriate version for each of them.
+Please note: For embeddings extractions, CTranspath and Pathoduet require two different versions of timm. Make sure you have the appropriate version for each of them.
 
 ## How To Run
 ##### Configs for the experiment settings
