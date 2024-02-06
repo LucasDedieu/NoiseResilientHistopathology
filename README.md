@@ -14,11 +14,11 @@ Check '*.yaml' file in the config folder for each experiment.
 
 ##### Arguments
 * noise_rate: noise rate
-* asym: use if it is asymmetric noise, default is symmetric
 * config_path: path to the configs folder
 * version: the config file name
 * exp_name: name of the experiments (as note)
 * seed: random seed
+* resize: resize size (for image-based method)
 
 Example for CTransPath runs on all noise rates for NCT-CRC-HE-100k dataset 
 ```console
