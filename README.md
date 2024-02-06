@@ -10,7 +10,38 @@ Please note: For embeddings extractions, CTranspath and Pathoduet require two di
 
 ## How To Run
 ##### Configs for the experiment settings
-Check '*.yaml' file in the config folder for each experiment.
+Add '*.yaml' file in the config folder for each experiment.
+
+Example: for CTransPath runs on NCT-CRC-HE-100k dataset, write config in configs/crc/ctranspath.yml
+```console
+epochs: 300
+patience: 20
+
+dataset:
+  name: 'crc'
+  type: 'deep_features'
+  backbone: 'ctranspath'
+  batch_size: 512
+  sigma: 0.4
+  num_workers: 2
+  val_size: 0.2
+  
+optimizer:
+  name: SGD
+  lr: 0.025
+  weight_decay: 1.e-4
+  momentum: 0.9
+
+scheduler:
+  name: CosineAnnealingLR
+  T_max: $epochs
+
+criterion:
+  name: CrossEntropyLoss
+
+warmup:
+    active: False
+```
 
 ##### Arguments
 * noise_rate: noise rate
