@@ -26,8 +26,9 @@ dataset
 val and test folders are optional and can be obtained by splitting train.
 
 ##### Embedding Datasets
-If you have manually extracted embeddings, place them in ```./deep_features/{dataset_name}```. Respect nomenclature : ```{train/val/test}_df_{backbone_name}.npy and {train/val/test}_labels_{backbone_name}.npy```
-Else, the code will extract embeddings and place them in the right folder before training.
+If you have manually extracted embeddings, place them in ```./deep_features/{dataset_name}```. Respect nomenclature : ```{train/val/test}_df_{backbone_name}.npy and {train/val/test}_labels_{backbone_name}.npy```.
+
+Else, the code will extract embeddings using image dataset and place them in the right folder before training.
 
 ##### Configs for the experiment settings
 Add '*.yaml' file in the config folder for each experiment.
