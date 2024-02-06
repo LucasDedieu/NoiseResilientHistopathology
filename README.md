@@ -9,6 +9,21 @@ pip install -r requirements.txt
 Please note: For embeddings extractions, CTranspath and Pathoduet require two different versions of timm. Make sure you have the appropriate version for each of them.
 
 ## How To Run
+##### Datasets
+We usd pythorch ImageFolder to load dataset so organize your datasets as:
+```console
+dataset
+└──train
+    └──class1
+        └──img1.png
+        └──img2.png
+        ...
+    └──class2
+    ...
+└──val
+└──test
+```
+
 ##### Configs for the experiment settings
 Add '*.yaml' file in the config folder for each experiment.
 
