@@ -33,7 +33,7 @@ Else, the code will extract embeddings using image dataset and place them in the
 ##### Configs for the experiment settings
 Add '*.yaml' file in the config folder for each experiment.
 
-Example: for CTransPath runs on NCT-CRC-HE-100k dataset, write config in configs/crc/ctranspath.yml
+Example: for CTransPath runs on NCT-CRC-HE-100k dataset, write config in ```configs/crc/ctranspath.yml```
 ```console
 epochs: 300
 patience: 20
