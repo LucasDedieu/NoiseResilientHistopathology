@@ -9,8 +9,8 @@ pip install -r requirements.txt
 Please note: For embeddings extractions, CTranspath and Pathoduet require two different versions of timm. Make sure you have the appropriate version for each of them.
 
 ## How To Run
-##### Datasets
-We usd pythorch ImageFolder to load dataset so organize your datasets as:
+##### Image Datasets
+We use pythorch ImageFolder to load dataset so organize your datasets as:
 ```console
 dataset
 └──train
@@ -23,6 +23,25 @@ dataset
 └──val
 └──test
 ```
+val and test folders are optional and can be obtained by splitting train.
+
+##### Embeddings Datasets
+If you have manually extracted embeddings, place them in ./deep_features/{dataset_name}. Respect nomenclature : {train/val/test}_df_{backbone_name}.npy and {train/val/test}_labels_{backbone_name}.npy
+Else, the code will extract embeddings and place them in the right folder before training.
+
+```console
+dataset
+└──train
+    └──class1
+        └──img1.png
+        └──img2.png
+        ...
+    └──class2
+    ...
+└──val
+└──test
+```
+val and test folders are optional and can be obtained by splitting train.
 
 ##### Configs for the experiment settings
 Add '*.yaml' file in the config folder for each experiment.
