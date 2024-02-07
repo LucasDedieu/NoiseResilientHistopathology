@@ -1,5 +1,5 @@
 # NoiseResilientHistopathology
-Official implementation for the paper "Contrastive-Based Deep Embeddings for Noise-Resilient Histopathology Image Classification".
+Official implementation for the paper "Contrastive-Based Deep Embeddings for Noise-Resilient Histopathology Image Classification". Code incoming soon
 
 ## Requirements
 ```console
