@@ -5,8 +5,9 @@ Official implementation for the paper "Contrastive-Based Deep Embeddings for Noi
 ```console
 pip install -r requirements.txt
 ```
-
 Please note: For embedding extractions, CTranspath and Pathoduet require two different versions of timm. Make sure you have the appropriate version for each of them.
+
+If you want to use PathoDuet or RetCCL backbones, you need to import their repositories to the root.
 
 ## How To Run
 ##### Image Datasets
