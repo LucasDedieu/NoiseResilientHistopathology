@@ -96,7 +96,6 @@ def main():
     train_loader = DataLoader(train_set, batch_size=config.dataset.batch_size, num_workers=config.dataset.num_workers, shuffle=True)
     val_loader = DataLoader(val_set, batch_size=config.dataset.batch_size)
     test_loader = DataLoader(test_set, batch_size=config.dataset.batch_size)
-    #val_loader=test_loader
 
     logger.info("Dataset loaded")
     logger.info("train: %s, val: %s, test: %s", len(train_loader.dataset), len(val_loader.dataset), len(test_loader.dataset))        
@@ -132,7 +131,7 @@ def main():
                     device=device, 
                     model=model, 
                     train_loader=train_loader, 
-                    val_loader=test_loader,
+                    val_loader=val_loader,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     start_epoch=start_epoch,
@@ -142,13 +141,12 @@ def main():
                     training_time=training_time,
                     checkpoint_path=checkpoint_path_file
         )
-    logger.info("Model successfully trained")
+        logger.info("Model successfully trained")
 
     logger.info("Starting model evaluation...")
     eval_model(logger, device, model, test_loader, class_names, results_path, checkpoint_path_file)
     sys.exit(0)
-
-
+    
 
 if __name__ == '__main__':
     main()
