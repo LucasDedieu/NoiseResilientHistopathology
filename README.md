@@ -66,7 +66,7 @@ warmup:
     active: False
 ```
 
-#### Scripts
+### Scripts
 
 Arguments:
 * noise_rate: noise rate
