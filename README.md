@@ -10,6 +10,7 @@ Please note: For embedding extractions, CTranspath and Pathoduet require two dif
 If you want to use PathoDuet or RetCCL backbones, you need to import their repositories to the root.
 
 ## How To Run
+### Datasets
 ##### Image Datasets
 We use pythorch ImageFolder to load dataset so organize your datasets as:
 ```console
@@ -31,7 +32,7 @@ If you have manually extracted embeddings, place them in ```./deep_features/{dat
 
 Else, the code will extract embeddings using image dataset and place them in the right folder before training.
 
-##### Configs for the experiment settings
+#### Configs for the experiment settings
 Add '*.yaml' file in the config folder for each experiment.
 
 Example: for CTransPath runs on NCT-CRC-HE-100k dataset, write config in ```configs/crc/ctranspath.yml```
@@ -65,7 +66,9 @@ warmup:
     active: False
 ```
 
-##### Arguments
+#### Scripts
+
+Arguments:
 * noise_rate: noise rate
 * config_path: path to the configs folder
 * version: the config file name
