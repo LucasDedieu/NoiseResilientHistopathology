@@ -1,0 +1,7 @@
+albumentations
+opencv-python
+transformers
+mlconfig
+torch
+torchvision
+timm-0.5.4.tar
