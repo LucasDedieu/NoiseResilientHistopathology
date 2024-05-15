@@ -101,5 +101,12 @@ After running, results and logs should be in ```experiments/{dataset_name}/{vers
 If you use this code in your work, please cite the accompanying paper:
 
 ```
-
+@misc{dedieu2024contrastivebased,
+      title={Contrastive-Based Deep Embeddings for Label Noise-Resilient Histopathology Image Classification}, 
+      author={Lucas Dedieu and Nicolas Nerrienet and Adrien Nivaggioli and Clara Simmat and Marceau Clavel and Arnaud Gauthier and Stéphane Sockeel and Rémy Peyret},
+      year={2024},
+      eprint={2404.07605},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
 ```
