@@ -5,22 +5,19 @@ from tqdm import tqdm
 import csv
 import numpy as np
 
-
-
-def eval_model(logger, device, model, test_loader, class_names, results_path, checkpoint_path):    
+def eval_model(logger, device, model, test_loader, class_names, results_path, checkpoint_path):
     """
-    Evaluate the performance of a trained model and write results into csv file.
+    Evaluates the performance of a trained model on the test dataset and logs the results.
 
     Args:
-        logger (logging.Logger): Logger object for logging information.
-        device (torch.device): Device to run the evaluation on.
-        model (torch.nn.Module): Trained model to evaluate.
-        test_loader (torch.utils.data.DataLoader): DataLoader for the test dataset.
-        class_names (list): List of class names.
-        results_path (str): Path to save the evaluation results.
-        checkpoint_path (str): Path to the checkpoint file containing training information.
-
-    """
+        logger (logging.Logger): Logger instance for logging messages.
+        device (torch.device): The device (CPU or GPU) to use for data processing.
+        model (torch.nn.Module): The trained model to evaluate.
+        test_loader (torch.utils.data.DataLoader): DataLoader for the test data.
+        class_names (list of str): List of class names.
+        results_path (str): Path to save the results CSV file.
+        checkpoint_path (str): Path to load the model checkpoint.
+    """ 
     is_binary = (len(class_names)==2)
     total = 0
     correct = 0
@@ -68,5 +65,4 @@ def eval_model(logger, device, model, test_loader, class_names, results_path, ch
         logger.info("Test balanced accuracy: %s",test_bacc)
         logger.info("Validation balanced accuracy: %s", val_bacc[-1])
         logger.info(classification_report(true_labels, predictions, target_names=class_names, digits=3))
-        
         logger.info("Results csv file written at %s", results_path)

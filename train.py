@@ -4,27 +4,26 @@ from sklearn.metrics import balanced_accuracy_score, precision_recall_fscore_sup
 import gc
 from tqdm import tqdm
 import time
-    
+import losses
 
 def train_model(config, logger, device, model, train_loader, val_loader, optimizer, scheduler, start_epoch=0, epochs_before_stop=-1, best_v_loss=float('inf'), v_acc=[], training_time=0, checkpoint_path=""):
     """
     Train a given model using the specified parameters and data loaders.
 
     Args:
-        config (object): Configuration object containing training parameters.
-        logger (logging.Logger): Logger object for logging information.
         device (torch.device): Device to run the training on (e.g., CPU or GPU).
         model (nn.Module): The neural network model to be trained.
         train_loader (DataLoader): DataLoader for the training set.
         val_loader (DataLoader): DataLoader for the validation set.
+        criterion (callable): Loss function.
         optimizer (torch.optim): Optimizer.
-        scheduler (torch.optim.lr_scheduler): Learning rate scheduler.
-        start_epoch (int, optional): Starting epoch number. Defaults to 0.
-        epochs_before_stop (int, optional): Number of epochs before early stopping. Defaults to -1.
-        best_v_loss (float, optional): Best validation loss achieved so far. Defaults to float('inf').
-        v_acc (list, optional): List of validation accuracies. Defaults to [].
-        training_time (int, optional): Total training time. Defaults to 0.
-        checkpoint_path (str, optional): Path to save model checkpoints. Defaults to "".
+        scheduler (torch.optim.lr_scheduler): Learning rate scheduler
+        n_epoch (int, optional): Number of training epochs. Default to 50
+        patience (int, optional) : Number of epoch for early stopping, Default to 15
+        warmup (bool, optional) : Whether to apply warmup training whith CE loss. Defaults to True.
+        logit_clip (bool, optional): Whether to apply logit clipping. Default to False.
+        tau (float, optional) : Parameter for logit clipping. Default to 1.
+        checkpoint (bool, optional) : Whether to save model each epoch; Default to False
 
     Returns:
         tuple: A tuple containing lists of training loss, validation loss, validation accuracy, precision, recall, and F1 score.

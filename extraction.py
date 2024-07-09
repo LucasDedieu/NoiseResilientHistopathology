@@ -12,12 +12,12 @@ DF_PATH = "deep_features"
 
 class Extractor(nn.Module):
     """
-    Extractor module for extracting deep features from images using a pre-trained backbone model.
+    Extractor class for extracting deep features from images using a specified backbone model.
 
     Args:
-        device (torch.device): Device to run the extraction on.
-        config (OmegaConf): Configuration object.
-        logger (logging.Logger): Logger object for logging information.
+        device (torch.device): The device (CPU or GPU) to use for data processing.
+        config (mlconfig.Config): Configuration object containing dataset settings.
+        logger (logging.Logger): Logger instance for logging messages.
     """
 
     def __init__(self, device, config, logger):
@@ -32,12 +32,12 @@ class Extractor(nn.Module):
 
     def extract(self,train_loader, val_loader, test_loader):
         """
-        Extract deep features from the provided data loaders.
+        Extracts deep features from the provided data loaders and saves them to disk.
 
         Args:
-            train_loader (torch.utils.data.DataLoader): DataLoader for the training dataset.
-            val_loader (torch.utils.data.DataLoader): DataLoader for the validation dataset.
-            test_loader (torch.utils.data.DataLoader): DataLoader for the test dataset.
+            train_loader (torch.utils.data.DataLoader): DataLoader for the training data.
+            val_loader (torch.utils.data.DataLoader): DataLoader for the validation data.
+            test_loader (torch.utils.data.DataLoader): DataLoader for the test data.
         """
         backbone = self.backbone.to(self.device)
 
@@ -101,15 +101,15 @@ class Extractor(nn.Module):
 
     def write_numpy(self, df_train, labels_train, df_val, labels_val, df_test, labels_test):
         """
-        Write extracted deep features and labels to numpy files.
+        Saves the extracted features and labels to disk as .npy files.
 
         Args:
-            df_train (np.array): Deep features for the training dataset.
-            labels_train (np.array): Labels for the training dataset.
-            df_val (np.array): Deep features for the validation dataset.
-            labels_val (np.array): Labels for the validation dataset.
-            df_test (np.array): Deep features for the test dataset.
-            labels_test (np.array): Labels for the test dataset.
+            df_train (numpy.ndarray): Extracted features from the training data.
+            labels_train (numpy.ndarray): Labels corresponding to the training data features.
+            df_val (numpy.ndarray): Extracted features from the validation data.
+            labels_val (numpy.ndarray): Labels corresponding to the validation data features.
+            df_test (numpy.ndarray): Extracted features from the test data.
+            labels_test (numpy.ndarray): Labels corresponding to the test data features.
         """
         dataset_name = self.config.dataset.name
         path = os.path.join(DF_PATH, dataset_name)

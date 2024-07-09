@@ -10,17 +10,17 @@ import os
 from abc import ABC, abstractmethod
 from PathoDuet.vits import VisionTransformerMoCo
 from RetCCL.ResNet import resnet50
-
-mean = [0.485, 0.456, 0.406]
-std = [0.229, 0.224, 0.225]
+from MoCoV3.vits import vit_large
 
 
 class AbstractModel(ABC, nn.Module):
     """
-    Abstract base class for all models.
+    Abstract base class for models.
 
-    Defines common methods like saving, loading.
+    This class provides a template for creating models with methods for saving
+    and loading model states, including optimizer and scheduler states.
     """
+
     def __init__(self):
         super(AbstractModel, self).__init__()
     
@@ -28,21 +28,7 @@ class AbstractModel(ABC, nn.Module):
     def forward(self, x):
         pass
 
-
     def save(self, path, epoch, epochs_before_stop, best_val_loss, optimizer, scheduler, val_acc, training_time):
-        """
-        Save model parameters to a file.
-
-        Args:
-            path (str): File path to save the model.
-            epoch (int): Current epoch.
-            epochs_before_stop (int): Number of epochs before early stopping.
-            best_val_loss (float): Best validation loss achieved so far.
-            optimizer (torch.optim.Optimizer): Optimizer state.
-            scheduler (torch.optim.lr_scheduler._LRScheduler): Scheduler state.
-            val_acc (float): Validation accuracy.
-            training_time (float): Time taken for training.
-        """
         state = {
             'epoch': epoch,
             'epochs_before_stop':epochs_before_stop,
@@ -56,19 +42,7 @@ class AbstractModel(ABC, nn.Module):
         torch.save(state, path+'.pth')
         return
 
-
     def load_model(self, path, optimizer, scheduler):
-        """
-        Load model parameters from a file.
-
-        Args:
-            path (str): File path to load the model from.
-            optimizer (torch.optim.Optimizer): Optimizer object.
-            scheduler (torch.optim.lr_scheduler._LRScheduler): Scheduler object.
-
-        Returns:
-            dict: Loaded model checkpoints.
-        """
         checkpoints = torch.load(path + '.pth')
         self.load_state_dict(checkpoints['model'])
         if optimizer is not None and checkpoints['optimizer'] is not None:
@@ -77,15 +51,23 @@ class AbstractModel(ABC, nn.Module):
             scheduler.load_state_dict(checkpoints['scheduler'])
         return checkpoints
 
+    def load_last(self, path):
+        all_saves = [f for f in os.listdir(path) if f.endswith('.pth')]
+        all_saves.sort()
+        path = all_saves[-1]
+        self.load_state_dict(torch.load(path))
+        return int(path[-7:-4]) #considering model file name is {model_name}_{num_epoch}.pth
+        
+
 
 
 class ClassificationHead(AbstractModel):
     """
-    Classification head consisting of fully connected layers.
+    Linear classification head.
 
     Args:
-        input_size (int): Size of the input features.
-        num_classes (int): Number of output classes.
+        input_size (int, optional): Size of the input features. Default is 768.
+        num_classes (int, optional): Number of output classes. Default is 2.
     """
 
     def __init__(self, input_size=768, num_classes=2):
@@ -109,18 +91,8 @@ class ClassificationHead(AbstractModel):
         return x
     
 
-class ConvStem(nn.Module):
-    """
-    Convolutional stem for vision transformer models. Code from CTransPath (https://github.com/Xiyue-Wang/TransPath/tree/main)
 
-    Args:
-        img_size (int or tuple): Size of the input image.
-        patch_size (int or tuple): Size of the image patch.
-        in_chans (int): Number of input channels.
-        embed_dim (int): Embedding dimension.
-        norm_layer (nn.Module): Normalization layer.
-        flatten (bool): Whether to flatten the output.
-    """
+class ConvStem(nn.Module):
 
     def __init__(self, img_size=224, patch_size=4, in_chans=3, embed_dim=768, norm_layer=None, flatten=True):
         super().__init__()
@@ -160,14 +132,7 @@ class ConvStem(nn.Module):
         return x
 
 
-
 def get_ctranspath():
-    """
-    Load the ctranspath backbone model.
-
-    Returns:
-        nn.Module: Loaded backbone model.
-    """
     model = timm.create_model('swin_tiny_patch4_window7_224', embed_layer=ConvStem, pretrained=False)
     model.head = nn.Identity()
     td = torch.load(r'./backbones/ctranspath.pth')
@@ -176,12 +141,6 @@ def get_ctranspath():
 
 
 def get_phikon():
-    """
-    Load the phikon backbone model.
-
-    Returns:
-        nn.Module: Loaded backbone model.
-    """
     model = ViTModel.from_pretrained("owkin/phikon", add_pooling_layer=False)
     model.cuda()
     return model
@@ -189,12 +148,6 @@ def get_phikon():
 
 
 def get_dino():
-    """
-    Load the Lunit-DINO backbone model.
-
-    Returns:
-        nn.Module: Loaded backbone model.
-    """
     model = VisionTransformer(
         img_size=224, patch_size=16, embed_dim=384, num_heads=6, num_classes=0
     )
@@ -210,51 +163,81 @@ def get_dino():
 
 
 def get_bt():
-    """
-    Load the Lunit-Barlow Twins backbone model.
-
-    Returns:
-        nn.Module: Loaded backbone model.
-    """
     model = ResNetTrunk(Bottleneck, [3, 4, 6, 3])
+    #model.fc = nn.Identity()
     model.load_state_dict(torch.hub.load_state_dict_from_url("https://github.com/lunit-io/benchmark-ssl-pathology/releases/download/pretrained-weights/bt_rn50_ep200.torch"),strict=True)
     return model
 
 
+def get_moco():
+    model = ResNetTrunk(Bottleneck, [3, 4, 6, 3])
+    #model.fc = nn.Identity()
+    model.load_state_dict(torch.hub.load_state_dict_from_url("https://github.com/lunit-io/benchmark-ssl-pathology/releases/download/pretrained-weights/mocov2_rn50_ep200.torch"),strict=True)
+    return model
+
+
+def get_moco():
+    model = vit_large()
+    print(model)
+    hidden_dim = model.head.weight.shape[1]
+    
+    #model.head =  build_mlp(3, hidden_dim, 4096, 256)
+    # rename moco pre-trained keys
+    checkpoint = torch.load("./backbones/vitl.pth.tar", map_location="cpu")
+    state_dict = checkpoint['state_dict']
+    for k in list(state_dict.keys()):
+        # retain only base_encoder up to before the embedding layer
+        if k.startswith('module.base_encoder'):
+            # fix naming bug in checkpoint
+            new_k = k[len("module.base_encoder."):]
+            if "blocks.13.norm13" in new_k:
+                new_k = new_k.replace("norm13", "norm1")
+            if "blocks.13.mlp.fc13" in k:
+                new_k = new_k.replace("fc13", "fc1")
+            if "blocks.14.norm14" in k:
+                new_k = new_k.replace("norm14", "norm2")
+            if "blocks.14.mlp.fc14" in k:
+                new_k = new_k.replace("fc14", "fc2")
+            # remove prefix
+            state_dict[new_k] = state_dict[k]
+        # delete renamed or unused k
+        del state_dict[k]
+    model = VisionTransformer(
+        img_size=224, patch_size=16, embed_dim=1024, num_heads=16, num_classes=0, mlp_ratio=4, qkv_bias=True
+    )
+    print(model)
+    model.load_state_dict(state_dict, strict=True)
+    #model.head = model.pre_logits
+    return model
+
+
+def build_mlp(num_layers, input_dim, mlp_dim, output_dim, last_bn=True):
+    mlp = []
+    for l in range(num_layers):
+        dim1 = input_dim if l == 0 else mlp_dim
+        dim2 = output_dim if l == num_layers - 1 else mlp_dim
+
+        mlp.append(nn.Linear(dim1, dim2, bias=False))
+
+        if l < num_layers - 1:
+            mlp.append(nn.BatchNorm1d(dim2))
+            mlp.append(nn.ReLU(inplace=True))
+        elif last_bn:
+            # follow SimCLR's design: https://github.com/google-research/simclr/blob/master/model_util.py#L157
+            # for simplicity, we further removed gamma in BN
+            mlp.append(nn.BatchNorm1d(dim2, affine=False))
+
+    return nn.Sequential(*mlp)
+
 
 def get_swav():
-    """
-    Load the Lunit-SwAV backbone model.
-
-    Returns:
-        nn.Module: Loaded backbone model.
-    """
     model = ResNetTrunk(Bottleneck, [3, 4, 6, 3])
     model.load_state_dict(torch.hub.load_state_dict_from_url("https://github.com/lunit-io/benchmark-ssl-pathology/releases/download/pretrained-weights/swav_rn50_ep200.torch"),strict=False)
     return model
 
 
 
-def get_moco():
-    """
-    Load the Lunit-MoCoV2 backbone model.
-
-    Returns:
-        nn.Module: Loaded backbone model.
-    """
-    model = ResNetTrunk(Bottleneck, [3, 4, 6, 3])
-    model.load_state_dict(torch.hub.load_state_dict_from_url("https://github.com/lunit-io/benchmark-ssl-pathology/releases/download/pretrained-weights/mocov2_rn50_ep200.torch"),strict=False)
-    return model
-
-
-
 def get_retccl():
-    """
-    Load the RetCCL backbone model.
-
-    Returns:
-        nn.Module: Loaded backbone model.
-    """
     model = resnet50(num_classes=128,mlp=False, two_branch=False, normlinear=True)
     pretext_model = torch.load(r'./backbones/retccl.pth')
     model.fc = nn.Identity()
@@ -263,32 +246,24 @@ def get_retccl():
 
 
 
-def get_pathoduet():
-    """
-    Load the PathoDuet backbone model.
 
-    Returns:
-        nn.Module: Loaded backbone model.
-    """
+def get_pathoduet():
     model = VisionTransformerMoCo(pretext_token=True, global_pool='avg')
-    model.head = nn.Linear(768, 4)
+    model.head = nn.Linear(768, 2)
     checkpoint = torch.load("./backbones/pathoduet.pth", map_location="cpu")
     model.load_state_dict(checkpoint, strict=False)
     return model
-    
+
+
+def get_ibot():
+    model = VisionTransformer(
+        img_size=224, patch_size=16, embed_dim=768, num_heads=12, num_classes=0, mlp_ratio=4, qkv_bias=True
+    )
+    model.load_state_dict(torch.load("./backbones/ibot.pth")['state_dict'], strict=False)
+    return model
 
 
 def get_backbone(logger, name="ctranspath"):
-    """
-    Load a specific backbone model.
-
-    Args:
-        logger (logging.Logger): Logger object for logging information.
-        name (str): Name of the backbone model to load.
-
-    Returns:
-        nn.Module: Loaded backbone model.
-    """
     if name == "ctranspath":
         return get_ctranspath()
     elif name =="phikon":
@@ -305,19 +280,15 @@ def get_backbone(logger, name="ctranspath"):
         return get_retccl()
     elif name=="pathoduet":
         return get_pathoduet()
+    elif name=="ibot":
+        return get_ibot()
     else:
         logger.error("Wrong backbone")
 
 
 
 class ResNetTrunk(ResNet):
-    """
-    ResNet trunk model.
 
-    Args:
-        *args: Variable length argument list.
-        **kwargs: Arbitrary keyword arguments.
-    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         del self.fc
@@ -339,11 +310,14 @@ class ResNetTrunk(ResNet):
 
 class ResNet50(AbstractModel):
     """
-    ResNet50 model for classification.
+    Get a ResNet50 model.
 
     Args:
         pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
-        num_classes (int): Number of output classes. Defaults to 2.
+        num_classes (int, optional): Number of output classes. Default is 2.
+
+    Returns:
+        nn.Module: ResNet50 model.
     """
     def __init__(self, pretrained=True, num_classes=2):
         super(ResNet50, self).__init__()

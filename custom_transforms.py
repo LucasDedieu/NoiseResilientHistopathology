@@ -3,21 +3,21 @@ import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 import cv2
 
+MEAN = [0.485, 0.456, 0.406]
+STD = [0.229, 0.224, 0.225]
 
-mean = [0.485, 0.456, 0.406]
-std = [0.229, 0.224, 0.225]
 
 
 def train_images(normalize=True, resize=224):
     """
-    Define augmentation pipeline for train images.
+    Creates a transformation pipeline for training images.
 
-    Args:s
-        normalize (bool, optional): Whether to apply normalization. Defaults to True.
-        resize (int, optional): Size to resize the images. Defaults to 224.
+    Args:
+        normalize (bool, optional): Whether to normalize the images. Default is True.
+        resize (int, optional): The size to which images should be resized. Default is 224.
 
     Returns:
-        albumentations.Compose: Composed transformations for training images.
+        albumentations.core.composition.Compose: A composed transformation pipeline.
     """
     transform_list = []
 
@@ -29,9 +29,7 @@ def train_images(normalize=True, resize=224):
     ])
 
     if normalize:
-        transform_list.append(A.Normalize(mean=mean, std=std))
-    else:
-        transform_list.append(A.Normalize(mean=[.0,.0,.0], std=[1.,1.,1.]))
+        transform_list.append(A.Normalize(mean=MEAN, std=STD))
 
     transform_list.append(ToTensorV2())
     return A.Compose(transform_list)
@@ -40,22 +38,20 @@ def train_images(normalize=True, resize=224):
 
 def val_images(normalize=True, resize=224):
     """
-    Define augmentation pipeline for validation and test images.
+    Creates a transformation pipeline for validation images.
 
     Args:
-        normalize (bool, optional): Whether to apply normalization. Defaults to True.
-        resize (int, optional): Size to resize the images. Defaults to 224.
+        normalize (bool, optional): Whether to normalize the images. Default is True.
+        resize (int, optional): The size to which images should be resized. Default is 224.
 
     Returns:
-        albumentations.Compose: Composed transformations for validation images.
+        albumentations.core.composition.Compose: A composed transformation pipeline.
     """
     transform_list = []
     #transform_list.append(A.PadIfNeeded(min_height=224, min_width=224, border_mode=cv2.BORDER_CONSTANT))
     transform_list.append(A.Resize(width=resize, height=resize, interpolation=cv2.INTER_LINEAR))
     if normalize:
-        transform_list.append(A.Normalize(mean=mean, std=std))
-    else:
-        transform_list.append(A.Normalize(mean=[.0,.0,.0], std=[1.,1.,1.]))
+        transform_list.append(A.Normalize(mean=MEAN, std=STD))
 
     transform_list.append(ToTensorV2())
     return A.Compose(transform_list)
@@ -64,13 +60,13 @@ def val_images(normalize=True, resize=224):
 
 def train_df(sigma=0.1):
     """
-    Define augmentation pipeline for train deep features.
+    Creates a Gaussian blur transformation for deep features.
 
     Args:
-        sigma (float, optional): Maximum standard deviation for Gaussian blur. Defaults to 0.1.
+        sigma (float, optional): Standard deviation for Gaussian kernel. Default is 0.1.
 
     Returns:
-        GaussianBlur: Instance of GaussianBlur transformation.
+        GaussianBlur: An instance of the GaussianBlur transformation.
     """
     return GaussianBlur(sigma=sigma)
 
@@ -78,10 +74,10 @@ def train_df(sigma=0.1):
 
 class GaussianBlur():
     """
-    Apply Gaussian blur transformation with stardard deviation between 0 and sigma.
+    Gaussian blur transformation for deep features.
 
     Args:
-        sigma (float, optional): Maximum standard deviation for Gaussian blur. Defaults to 0.1.
+        sigma (float, optional): Standard deviation for Gaussian kernel. Default is 0.1.
     """
     def __init__(self, sigma=0.1):
         self.sigma = sigma
@@ -89,3 +85,4 @@ class GaussianBlur():
     def __call__(self, input):
         s = np.random.uniform(0,self.sigma)
         return input+np.random.normal(size=input.shape, scale=s)
+

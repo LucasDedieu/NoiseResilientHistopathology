@@ -4,10 +4,6 @@ import numpy as np
 import mlconfig
 mlconfig.register(torch.nn.CrossEntropyLoss)
 
-'''
-Code from https://github.com/HanxunH/Active-Passive-Losses
-'''
-
 if torch.cuda.is_available():
     torch.backends.cudnn.benchmark = True
     if torch.cuda.device_count() > 1:
@@ -31,6 +27,7 @@ class SCE(torch.nn.Module):
     def forward(self, pred, labels):
         # CCE
         ce = self.cross_entropy(pred, labels)
+
         # RCE
         pred = F.softmax(pred, dim=1)
         pred = torch.clamp(pred, min=1e-7, max=1.0)

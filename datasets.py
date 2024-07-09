@@ -12,7 +12,7 @@ import cv2
 
 
 DATASETS = ["crc", "pcam", "bach", "mhist", "lc", "gashis"]
-BACKBONES = ["ctranspath", "dino", "bt", "swav", "moco","phikon", "retccl", "pathoduet"]
+BACKBONES = ["ctranspath", "dino", "phikon", "retccl", "pathoduet", "bt", "swav", "moco", "ibot"]
 
 CRC_CLASS_NAMES = ['ADI', 'BACK', 'DEB', 'LYM', 'MUC', 'MUS', 'NORM', 'STR', 'TUM']
 CRC_IMAGES_PATH = '/home/primaa/Lucas/crc/'
@@ -26,36 +26,33 @@ MHIST_IMAGES_PATH = '/home/primaa/Lucas/mhist/'
 BACH_CLASS_NAMES = ['benign', 'insitu', 'invasive', 'normal']
 BACH_IMAGES_PATH = '/media/primaa/nfs_nas/external_databases/from_BACH/'
 
-LC_CLASS_NAMES = ['colon_aca', 'colon_benign','lung_aca', 'lung_n', 'lung_scc']
+LC_CLASS_NAMES = ['lung_benign', 'lung_aca', 'lung_scc', 'colon_benign', 'colon_aca']
 LC_IMAGES_PATH = '/home/primaa/Lucas/lc/'
 
-GASHIS_CLASS_NAMES = ['abnormal', 'normal']
-GASHIS_IMAGES_PATH = '/home/primaa/Lucas/gashis/'
+
+GASHIS_CLASS_NAMES= ['abnormal', 'normal']
+GASHIS_IMAGES_PATH = "D:/NoisyLabels/dataset/gashis/"
 
 DF_PATH = "./deep_features"
 
 
-
 def get_dataset(device, config, logger, noise_rate=0, seed=42):
     """
-    Get dataset according to configuration parameters. 
+    Retrieves and prepares the dataset based on the provided configuration.
 
     Args:
-        device (torch.device): Device.
-        config (OmegaConf): Configuration object.
-        logger (logging.Logger): Logger object for logging information.
-        noise_rate (float, optional): Uniform nois rate to add to the dataset. Defaults to 0.
-        seed (int, optional): Seed for random number generation. Defaults to 42.
+        device (torch.device): The device (CPU or GPU) to use for data processing.
+        config (object): Configuration object containing dataset settings.
+        logger (logging.Logger): Logger instance for logging messages.
+        noise_rate (float, optional): Proportion of noisy labels to introduce. Default is 0.
+        seed (int, optional): Random seed for reproducibility. Default is 42.
 
     Returns:
-        tuple: A tuple containing class names, training data, validation data, and test data.
-            - class_names (list): List of class names.
-            - X_train (np.array): Training data.
-            - y_train (np.array): Training labels.
-            - X_val (np.array): Validation data.
-            - y_val (np.array): Validation labels.
-            - X_test (np.array): Test data.
-            - y_test (np.array): Test labels.
+        tuple: A tuple containing class names, training data (X_train, y_train),
+               validation data (X_val, y_val), and test data (X_test, y_test).
+
+    Raises:
+        SystemExit: If the dataset name is not supported.
     """
     dataset_name = config.dataset.name
     if dataset_name not in DATASETS:
@@ -79,22 +76,17 @@ def get_dataset(device, config, logger, noise_rate=0, seed=42):
 
 def get_dataset_images(config, logger, noise_rate, seed):
     """
-    Get image dataset according to configuration parameters.
+    Loads and prepares image dataset.
 
     Args:
-        config (OmegaConf): Configuration object.
-        logger (logging.Logger): Logger object for logging information.
-        noise_rate (float): Noise rate.
-        seed (int): Seed for random number generation.
+        config (object): Configuration object containing dataset settings.
+        logger (logging.Logger): Logger instance for logging messages.
+        noise_rate (float): Proportion of noisy labels to introduce.
+        seed (int): Random seed for reproducibility.
 
     Returns:
-        tuple: A tuple containing training data, validation data, and test data.
-            - X_train (np.array): Training data.
-            - y_train (np.array): Training labels.
-            - X_val (np.array): Validation data.
-            - y_val (np.array): Validation labels.
-            - X_test (np.array): Test data.
-            - y_test (np.array): Test labels.
+        tuple: A tuple containing training data (X_train, y_train),
+               validation data (X_val, y_val), and test data (X_test, y_test).
     """
     dataset_name = config.dataset.name
     path = globals()[dataset_name.upper()+"_IMAGES_PATH"]
@@ -145,23 +137,21 @@ def get_dataset_images(config, logger, noise_rate, seed):
 
 def get_dataset_df(device, config, logger, noise_rate, seed):
     """
-    Get deep feature dataset according to configuration parameters. If deep feature numpy files does not exist, proceed to extraction from images.
+    Loads and prepares deep feature dataset.
 
     Args:
-        device (torch.device): Device.
-        config (OmegaConf): Configuration object.
-        logger (logging.Logger): Logger object for logging information.
-        noise_rate (float): Noise rate.
-        seed (int): Seed for random number generation.
+        device (torch.device): The device (CPU or GPU) to use for data processing.
+        config (object): Configuration object containing dataset settings.
+        logger (logging.Logger): Logger instance for logging messages.
+        noise_rate (float): Proportion of noisy labels to introduce.
+        seed (int): Random seed for reproducibility.
 
     Returns:
-        tuple: A tuple containing training data, validation data, and test data.
-            - X_train (np.array): Training data.
-            - y_train (np.array): Training labels.
-            - X_val (np.array): Validation data.
-            - y_val (np.array): Validation labels.
-            - X_test (np.array): Test data.
-            - y_test (np.array): Test labels.
+        tuple: A tuple containing training data (X_train, y_train),
+               validation data (X_val, y_val), and test data (X_test, y_test).
+
+    Raises:
+        SystemExit: If the backbone name is not supported.
     """
     dataset_name = config.dataset.name
     backbone_name = config.dataset.backbone
@@ -176,11 +166,10 @@ def get_dataset_df(device, config, logger, noise_rate, seed):
     if not already_extracted(logger, path, backbone_name):
         logger.info("DF dataset not found. Procedding extraction...")
         X_train, y_train, X_val, y_val, X_test, y_test = get_dataset_images(config, logger, noise_rate=0, seed=seed)
-        normalize = False if backbone_name == "pathoduet" else True
-        train_set = ImgDataset(X_train, y_train, transform=custom_transforms.val_images(normalize=normalize))
-        val_set = ImgDataset(X_val, y_val, transform=custom_transforms.val_images(normalize=normalize))
-        test_set = ImgDataset(X_test, y_test, transform=custom_transforms.val_images(normalize=normalize))
-        train_loader = DataLoader(train_set, batch_size=16, num_workers=config.dataset.num_workers)
+        train_set = ImgDataset(X_train, y_train, transform=custom_transforms.val_images())
+        val_set = ImgDataset(X_val, y_val, transform=custom_transforms.val_images())
+        test_set = ImgDataset(X_test, y_test, transform=custom_transforms.val_images())
+        train_loader = DataLoader(train_set, batch_size=16)#, num_workers=config.dataset.num_workers)
         val_loader = DataLoader(val_set, batch_size=16)
         test_loader = DataLoader(test_set, batch_size=16)
         extractor = Extractor(device=device, config=config, logger=logger)
@@ -200,15 +189,15 @@ def get_dataset_df(device, config, logger, noise_rate, seed):
 
 def already_extracted(logger, path, backbone_name):
     """
-    Check if the deep features have already been extracted.
+    Checks if the deep features have already been extracted.
 
     Args:
-        logger (logging.Logger): Logger object for logging information.
+        logger (logging.Logger): Logger instance for logging messages.
         path (str): Path to the directory containing the extracted features.
-        backbone_name (str): Name of the backbone model.
+        backbone_name (str): Name of the backbone used for feature extraction.
 
     Returns:
-        bool: True if the deep features have already been extracted, False otherwise.
+        bool: True if all required files are found, False otherwise.
     """
     try:
         files = os.listdir(path)
@@ -232,22 +221,20 @@ def already_extracted(logger, path, backbone_name):
 
 def add_noise(logger, X, y, noise_rate, seed=42):
     """
-    Add uniform noise to the labels of the dataset.
+    Introduces noise into the labels of the dataset.
 
     Args:
-        logger (logging.Logger): Logger object for logging information.
-        X (np.array): Input data.
-        y (np.array): Target labels.
-        noise_rate (float): Noise rate to add to the labels.
-        seed (int, optional): Seed for random number generation. Defaults to 42.
+        logger (logging.Logger): Logger instance for logging messages.
+        X (numpy.ndarray): Feature data.
+        y (numpy.ndarray): Label data.
+        noise_rate (float): Proportion of noisy labels to introduce.
+        seed (int, optional): Random seed for reproducibility. Default is 42.
 
     Returns:
-        tuple: A tuple containing the input data and the noisy labels.
-            - X (np.array): Input data.
-            - y_noisy (np.array): Noisy labels.
+        tuple: A tuple containing the feature data (X) and the noisy labels (y_noisy).
     """
     if noise_rate <= 0:
-        logger.error("Noise rate must be positive or null. Returning original labels")
+        logger.info("Noise rate must be positive or null. Returning original labels")
         return X, y
     np.random.seed(seed)
 
@@ -306,8 +293,8 @@ class DFDataset(Dataset):
     Deep feature dataset.
 
     Args:
-        deep features (np.array): Numpy array of deep features.
-        labels (np.array): Numpy array of corresponding labels.
+        deep features (np.array): Numpy array of images.
+        labels (np.array): Numpy array of labels corresponding to the images.
     """
     def __init__(self, deep_features, labels, transform=None):
         self.deep_features = deep_features
